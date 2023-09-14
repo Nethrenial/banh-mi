@@ -1,0 +1,14 @@
+{
+  "name": "banh-mi",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "start:dev": "bun src/index.ts"
+  },
+  "devDependencies": {
+    "bun-types": "^0.5.0"
+  },
+  "dependencies": {
+    "path-to-regexp": "^6.2.1"
+  }
+}

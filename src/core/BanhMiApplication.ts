@@ -185,6 +185,45 @@ export class BanhMiApplication {
                     return null
                 }
             }
+        } else {
+            let matcherIndex = 0
+            let matcherNode: BanhMiRouteMatcherNode | undefined = undefined
+            do {
+                const matcher = pathSegments[matcherIndex]
+                const prevMatcherNode: BanhMiRouteMatcherNode | undefined = matcherNode
+                matcherNode = matcherIndex === 0 ? this.testHandlers[method][matcher] : (matcherNode ? matcherNode.children[matcher] : undefined)
+                console.log(`MatcherNode for index ${matcherIndex} is `, matcherNode)
+
+                if (matcherNode && matcherIndex === pathSegments.length - 1) {
+                    return { handlers: matcherNode.handlers, type: BanhMiRouteType.static }
+                } else if (matcherNode && matcherIndex !== pathSegments.length - 1) {
+                    console.log(`Static match found for ${matcher}, continue checking for the next matcher`)
+                } else if (!matcherNode) {
+                    const dynamicMatcher = this.matchingNodeHasDynamicMatcher(matcherIndex === 0 ? this.testHandlers[method] : (prevMatcherNode ? prevMatcherNode.children : {}))
+                    if (dynamicMatcher) {
+                        if (matcherIndex !== pathSegments.length - 1) {
+                            console.log(`Dynamic match found for ${matcher}, setting params and continue checking for the next matcher`)
+                            const paramName = dynamicMatcher.split(":")[1]
+                            params[paramName] = matcher
+                        } else {
+                            const dynamicMatcherNode = matcherIndex === 0 ? this.testHandlers[method][dynamicMatcher] : (prevMatcherNode ? prevMatcherNode.children[dynamicMatcher] : undefined)
+                            if (dynamicMatcherNode) {
+                                console.log(dynamicMatcherNode)
+                                const paramName = dynamicMatcher.split(":")[1]
+                                params[paramName] = matcher
+                                return dynamicMatcherNode.handlers.length > 0 ? { handlers: dynamicMatcherNode.handlers, type: BanhMiRouteType.dynamic, params } : null
+                            } else {
+                                return null
+                            }
+                        }
+                        if (prevMatcherNode)
+                            matcherNode = matcherIndex === 0 ? this.testHandlers[method][dynamicMatcher] : (prevMatcherNode.children as Record<string, BanhMiRouteMatcherNode>)[dynamicMatcher]
+                    } else {
+                        return null
+                    }
+                }
+                matcherIndex++
+            } while (matcherIndex < pathSegments.length)
         }
     }
 

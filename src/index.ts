@@ -39,6 +39,11 @@ app.get("/books/:id/chapters/:chapterId/delete", (req, res) => {
   console.log(`I'm the '/books/:id/chapters/:chapterId/delete' route`);
 });
 
+
+app.get("/authors/:id/books/:bookId/download", (req, res) => {
+  console.log(`I'm the '/authors/:id/books/:bookId/download' route`);
+});
+
 console.timeEnd("Time to register routes")
 
 

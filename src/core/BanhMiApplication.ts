@@ -3,6 +3,7 @@ import { BanhMiRequest } from "./BanhMiRequest.js"
 import { BanhMiResponse } from "./BanhMiResponse.js"
 import { BanhMiHttpMethod, BanhMiRouteType } from "./enums/index.js"
 import { BanhMiHandler, BanhMiRouteHandlersMap, BanhMiRouteMatcherNode } from "./types/index.js"
+import { onlyLogInFrameworkDevelopmentProcess } from "./utils/index.js"
 
 
 
@@ -100,18 +101,18 @@ export class BanhMiApplication {
 
 
     listen(port?: number, callback?: (server: BunServer) => any | Promise<any>) {
-        // console.log(this.testHandlers)
+        // onlyLogInFrameworkDevelopmentProcess(this.testHandlers)
         const that = this
         const server = Bun.serve({
             port,
             fetch(request, server) {
 
-                const banhMiRequest = new BanhMiRequest(that, request)
-                const path = banhMiRequest.path
+                const path = new URL(request.url).pathname
 
                 console.time("Time to get the matched handlers")
                 const matchedHandlers = that.matchRoute(path, request.method as BanhMiHttpMethod)
                 console.timeEnd("Time to get the matched handlers")
+                onlyLogInFrameworkDevelopmentProcess("Matched handlers", matchedHandlers)
                 if (matchedHandlers === null) {
                     return new Response("Not Found", {
                         status: 404,
@@ -120,8 +121,11 @@ export class BanhMiApplication {
                 } else {
                     if (matchedHandlers) {
                         if (matchedHandlers.type === BanhMiRouteType.dynamic) {
-                            console.log(matchedHandlers.params)
+                            onlyLogInFrameworkDevelopmentProcess(matchedHandlers.params)
                         }
+                        const banhMiRequest = new BanhMiRequest(that, request, {
+                            _params: matchedHandlers.params
+                        })
                         matchedHandlers.handlers.forEach(h => {
                             h(banhMiRequest, new BanhMiResponse())
                         })
@@ -163,21 +167,21 @@ export class BanhMiApplication {
 
         if (path === "/") {
             const matcherNode = this.testHandlers[method]['/']
-            return matcherNode && matcherNode.handlers.length > 0 ? { handlers: matcherNode.handlers, type: BanhMiRouteType.static } : null
+            return matcherNode && matcherNode.handlers.length > 0 ? { handlers: matcherNode.handlers, type: BanhMiRouteType.static, params } : null
         }
 
         const pathSegments = path.split('/').slice(1)
-        console.log("Path segments", pathSegments)
+        onlyLogInFrameworkDevelopmentProcess("Path segments", pathSegments)
         if (pathSegments.length === 1) {
             const matcherNode = this.testHandlers[method][pathSegments[0]]
             if (matcherNode) {
-                console.log("Found a matcher node => ", matcherNode.self)
-                return { handlers: matcherNode.handlers, type: BanhMiRouteType.static }
+                onlyLogInFrameworkDevelopmentProcess("Found a matcher node => ", matcherNode.self)
+                return matcherNode.handlers.length > 0 ? { handlers: matcherNode.handlers, type: BanhMiRouteType.static, params } : null
             } else {
                 const dynamicMatcher = this.matchingNodeHasDynamicMatcher(this.testHandlers[method])
                 if (dynamicMatcher) {
                     const dynamicMatcherNode = this.testHandlers[method][dynamicMatcher]
-                    console.log(dynamicMatcherNode)
+                    onlyLogInFrameworkDevelopmentProcess(dynamicMatcherNode)
                     const paramName = dynamicMatcher.split(":")[1]
                     params[paramName] = pathSegments[0]
                     return dynamicMatcherNode.handlers.length > 0 ? { handlers: dynamicMatcherNode.handlers, type: BanhMiRouteType.dynamic, params } : null
@@ -192,23 +196,23 @@ export class BanhMiApplication {
                 const matcher = pathSegments[matcherIndex]
                 const prevMatcherNode: BanhMiRouteMatcherNode | undefined = matcherNode
                 matcherNode = matcherIndex === 0 ? this.testHandlers[method][matcher] : (matcherNode ? matcherNode.children[matcher] : undefined)
-                console.log(`MatcherNode for index ${matcherIndex} is `, matcherNode)
+                onlyLogInFrameworkDevelopmentProcess(`MatcherNode for index ${matcherIndex} is `, matcherNode)
 
                 if (matcherNode && matcherIndex === pathSegments.length - 1) {
-                    return { handlers: matcherNode.handlers, type: BanhMiRouteType.static }
+                    return matcherNode.handlers.length > 0 ? { handlers: matcherNode.handlers, type: BanhMiRouteType.static, params } : null
                 } else if (matcherNode && matcherIndex !== pathSegments.length - 1) {
-                    console.log(`Static match found for ${matcher}, continue checking for the next matcher`)
+                    onlyLogInFrameworkDevelopmentProcess(`Static match found for ${matcher}, continue checking for the next matcher`)
                 } else if (!matcherNode) {
                     const dynamicMatcher = this.matchingNodeHasDynamicMatcher(matcherIndex === 0 ? this.testHandlers[method] : (prevMatcherNode ? prevMatcherNode.children : {}))
                     if (dynamicMatcher) {
                         if (matcherIndex !== pathSegments.length - 1) {
-                            console.log(`Dynamic match found for ${matcher}, setting params and continue checking for the next matcher`)
+                            onlyLogInFrameworkDevelopmentProcess(`Dynamic match found for ${matcher}, setting params and continue checking for the next matcher`)
                             const paramName = dynamicMatcher.split(":")[1]
                             params[paramName] = matcher
                         } else {
                             const dynamicMatcherNode = matcherIndex === 0 ? this.testHandlers[method][dynamicMatcher] : (prevMatcherNode ? prevMatcherNode.children[dynamicMatcher] : undefined)
                             if (dynamicMatcherNode) {
-                                console.log(dynamicMatcherNode)
+                                onlyLogInFrameworkDevelopmentProcess(dynamicMatcherNode)
                                 const paramName = dynamicMatcher.split(":")[1]
                                 params[paramName] = matcher
                                 return dynamicMatcherNode.handlers.length > 0 ? { handlers: dynamicMatcherNode.handlers, type: BanhMiRouteType.dynamic, params } : null

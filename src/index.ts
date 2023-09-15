@@ -40,8 +40,9 @@ app.get("/books/:id/chapters/:chapterId/delete", (req, res) => {
 });
 
 
-app.get("/authors/:id/books/:bookId/download", (req, res) => {
-  console.log(`I'm the '/authors/:id/books/:bookId/download' route`);
+app.get("/authors/:authorId/books/:bookId/download", (req, res) => {
+  // console.log(`I'm the '/authors/:id/books/:bookId/download' route`);
+  console.log(req.params)
 });
 
 console.timeEnd("Time to register routes")

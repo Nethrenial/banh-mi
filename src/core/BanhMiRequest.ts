@@ -17,10 +17,51 @@ export class BanhMiRequest {
      */
     app: BanhMiApplication
 
-    constructor(app: BanhMiApplication, request: Request) {
+    private _params: Record<string, string> = {}
+
+
+    constructor(app: BanhMiApplication, request: Request, options?: {
+        _params?: Record<string, string>
+    }) {
         this.app = app
         this.request = request
+        if (options) {
+            this._params = options._params ? options._params : {}
+        }
     }
+
+
+    /**
+     * Get dynamic params defined in the path
+     * They will have the same name as defined in the path
+     * @example
+     * ```ts
+     * app.get("/books/:bookId", (req, res) => {
+     *      console.log(req.params) 
+     *      // will give  { bookId: 'whatever-matched-string' }
+     * })
+     * ```
+     */
+    get params() {
+        return this._params
+    }
+
+
+    /**
+     * Returns the same params object as BanhMiRequest.params, but will type information you can pass as a generic
+     * Useful for autocomplete
+     * @example
+     * ```ts
+     * app.get("/books/:bookId", (req, res) => {
+     *      const params = req.getParams<{bookId: string}>()
+     *      params.bookId // autocomplete !!
+     * })
+     * ```
+     */
+    getParams<ParamsInterface = Record<string, string>>() {
+        return this._params as ParamsInterface
+    }
+
 
     private _baseUrl: string | null = null
     /**

@@ -7,6 +7,7 @@ import { parseCookies, parseHeaders } from "./utils/index.js"
  * TODO: Add req.protocol
  */
 export class BanhMiRequest {
+    [x: string]: any
 
     private request: Request
 

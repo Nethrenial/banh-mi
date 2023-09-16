@@ -1,4 +1,7 @@
 export enum BanhMiHttpMethod {
     GET = "GET",
-    POST = "POST"
+    POST = "POST",
+    PUT = "PUT",
+    PATCH = "PATCH",
+    DELETE = "DELETE"
 }

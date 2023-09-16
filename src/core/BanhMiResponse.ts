@@ -22,7 +22,7 @@ export class BanhMiResponse {
 
         // Handle different data types
         if (data !== undefined) {
-            if (data instanceof ReadableStream || Array.isArray(data) || data instanceof Blob || data instanceof FormData || data === null) {
+            if (data instanceof ReadableStream || data instanceof Blob || data instanceof FormData || data === null) {
                 body = data;
             } else if (['boolean', 'number', 'string', 'object'].includes(typeof data)) {
                 // Convert objects to JSON and set appropriate headers
@@ -46,6 +46,11 @@ export class BanhMiResponse {
         return new Response(data === undefined ? data : body, responseOptions);
     }
 
+    sendArrayOfBlobPart(data: BlobPart[]) {
+        const responseOptions: ResponseInit = {};
+        return new Response(data, responseOptions);
+    }
+
     json(data: JsonSerializable) {
         const responseOptions: ResponseInit = {};
         if (['boolean', 'number', 'string', 'object', 'null', 'undefined'].includes(typeof data)) {
@@ -56,6 +61,7 @@ export class BanhMiResponse {
                     ...responseOptions.headers,
                     'Content-Type': 'application/json',
                 };
+                console.log(body)
                 return new Response(body, responseOptions);
             } catch (error) {
                 throw new Error('Given object is not json serializable');

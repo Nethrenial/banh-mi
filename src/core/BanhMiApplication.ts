@@ -2,9 +2,12 @@ import { Server as BunServer } from "bun"
 import { BanhMiRequest } from "./BanhMiRequest.js"
 import { BanhMiResponse } from "./BanhMiResponse.js"
 import { BanhMiHttpMethod, BanhMiRouteType } from "./enums/index.js"
-import { BanhMiHandler, BanhMiRouteHandlersMap, BanhMiRouteMatcherNode } from "./types/index.js"
-import { onlyLogInFrameworkDevelopmentProcess } from "./utils/index.js"
+import { BanhMiBodyParsingMethod, BanhMiHandler, BanhMiRouteHandlersMap, BanhMiRouteMatcherNode, SetupBodyParserOption } from "./types/index.js"
+import { onlyLogInFrameworkDevelopmentProcess, parseJsonBody } from "./utils/index.js"
 import { isAsyncFunction } from "util/types"
+import { BanhMiRouter } from "./BanhMiRouter.js"
+
+
 
 
 
@@ -18,6 +21,33 @@ export class BanhMiApplication {
         DELETE: {},
         PATCH: {},
         PUT: {},
+    }
+
+    bodyParsers: SetupBodyParserOption[] = []
+
+    // for now use method will only be used to register routers
+    setupRouter(path: string, router: BanhMiRouter) {
+        const routerHandlersMap = router.routerHandlersMap
+        for (const method in routerHandlersMap) {
+            if (routerHandlersMap.hasOwnProperty(method)) {
+                const handlersMap = routerHandlersMap[method as BanhMiHttpMethod]
+                for (const partialPath in handlersMap) {
+                    if (handlersMap.hasOwnProperty(partialPath)) {
+                        const handlers = handlersMap[partialPath]
+                        const fullPath = path + partialPath
+                        this.registerRoute(fullPath, method as BanhMiHttpMethod, handlers)
+                    }
+                }
+            }
+        }
+    }
+
+    setupGlobalMiddleware(...handlers: BanhMiHandler[]) {
+        this.globalHandlers.push(...handlers)
+    }
+
+    setupBodyParser<T extends BanhMiBodyParsingMethod>(parser: SetupBodyParserOption<T>) {
+        this.bodyParsers.push(parser)
     }
 
 
@@ -49,10 +79,41 @@ export class BanhMiApplication {
             async fetch(request, server) {
 
                 const path = new URL(request.url).pathname
+                const banhMiRequest = new BanhMiRequest(that, request)
+                const banhMiResponse = new BanhMiResponse()
 
-                console.time("Time to get the matched handlers")
+
+                that.bodyParsers.forEach(async ({ method, options }) => {
+                    switch (method) {
+                        case BanhMiBodyParsingMethod.json:
+                            console.log("Got here")
+                            const parseResult = await parseJsonBody(request)
+                            if(parseResult) {
+                                banhMiRequest.body = parseResult
+                            }
+                    }
+                })
+
+
+
+                let response: any
+                for (const [index, handler] of that.globalHandlers.entries()) {
+                    if (response instanceof Response) {
+                        break;
+                    }
+
+                    const isHandlerAsync = isAsyncFunction(handler);
+                    response = isHandlerAsync
+                        ? await handler(banhMiRequest, banhMiResponse)
+                        : handler(banhMiRequest, banhMiResponse);
+
+                }
+                if (response instanceof Response)
+                    return response
+
+                // console.time("Time to get the matched handlers")
                 const matchedHandlers = that.matchRoute(path, request.method as BanhMiHttpMethod)
-                console.timeEnd("Time to get the matched handlers")
+                // console.timeEnd("Time to get the matched handlers")
                 onlyLogInFrameworkDevelopmentProcess("Matched handlers", matchedHandlers)
                 if (matchedHandlers === null) {
                     return new Response("Not Found", {
@@ -64,12 +125,9 @@ export class BanhMiApplication {
                         if (matchedHandlers.type === BanhMiRouteType.dynamic) {
                             onlyLogInFrameworkDevelopmentProcess(matchedHandlers.params)
                         }
-                        const banhMiRequest = new BanhMiRequest(that, request, {
-                            _params: matchedHandlers.params
-                        })
 
+                        banhMiRequest.params = matchedHandlers.params
                         const banhMiResponse = new BanhMiResponse()
-
 
                         const handlers = matchedHandlers.handlers
                         if (handlers.length === 1) {
@@ -117,7 +175,11 @@ export class BanhMiApplication {
             this.handlers[method]['/'] = { type: BanhMiRouteType.static, handlers, children: {}, self: "/" }
             return
         }
-        const pathSegments = path.split('/').slice(1)
+        // remove last slash if any
+        if (path[path.length - 1] === '/') {
+            path = path.slice(0, path.length - 1)
+        }
+        let pathSegments = path.split('/').slice(1)
 
         let matcherIndex = 0
         let matcherNode: BanhMiRouteMatcherNode | undefined = this.handlers[method][pathSegments[0]]
@@ -162,6 +224,11 @@ export class BanhMiApplication {
 
 
     private matchRoute(path: string, method: BanhMiHttpMethod) {
+
+        // remove last slash if any
+        if (path[path.length - 1] === '/') {
+            path = path.slice(0, path.length - 1)
+        }
 
         const params: Record<string, string> = {}
 

@@ -1,5 +1,8 @@
+import { json, raw, text, urlencoded } from 'body-parser'
 import { BanhMiApplication } from "./BanhMiApplication.js"
 import { parseCookies, parseHeaders } from "./utils/index.js"
+
+
 
 /**
  * BanhMiRequest class
@@ -18,7 +21,7 @@ export class BanhMiRequest {
      */
     app: BanhMiApplication
 
-    private _params: Record<string, string> = {}
+    private _params: Record<string, string | undefined> = {}
 
 
     constructor(app: BanhMiApplication, request: Request, options?: {
@@ -47,6 +50,10 @@ export class BanhMiRequest {
         return this._params
     }
 
+    set params(params: Record<string, string | undefined>) {
+        this._params = params
+    }
+
 
     /**
      * Returns the same params object as BanhMiRequest.params, but will type information you can pass as a generic
@@ -59,7 +66,7 @@ export class BanhMiRequest {
      * })
      * ```
      */
-    getParams<ParamsInterface = Record<string, string>>() {
+    getParams<ParamsInterface = Record<string, string | undefined>>() {
         return this._params as ParamsInterface
     }
 
@@ -198,6 +205,20 @@ export class BanhMiRequest {
  */
     getQuery<QueryInterface = Record<string, string>>() {
         return this.query as QueryInterface
+    }
+
+    private _body: any = null
+
+    get body() {
+        return this._body ?? undefined
+    }
+
+    set body(body: any) {
+        this._body = body
+    }
+
+    getBody<BodyInterface = any>() {
+        return this.body as BodyInterface
     }
 
 }

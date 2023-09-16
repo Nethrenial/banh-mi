@@ -1,6 +1,21 @@
 import { BanhMiApplication } from "./core/index.js";
+import { booksController } from "./controllers/index.js"
+import { BanhMiBodyParsingMethod } from "./core/types/banh-mi-request.types.js";
 
 const app = new BanhMiApplication();
+
+app.setupBodyParser({
+  method: BanhMiBodyParsingMethod.json,
+  options: {
+
+  }
+})
+
+app.setupGlobalMiddleware((req) => {
+  req.message1 = "Hello from middleware 1"
+})
+
+app.setupRouter("/books", booksController)
 
 
 function sleep(ms: number, message?: string) {
@@ -25,42 +40,41 @@ app.get("/", (req, res) => {
   return res.send("Done going through all middleware")
 });
 
-console.time("Time to register routes")
 
-app.get("/:anyRoute", (req, res) => {
-  console.log(req.params)
-})
+// app.get("/:anyRoute", (req, res) => {
+//   console.log(req.params)
+// })
 
-app.get("/books", (req, res) => {
-  console.log(`I'm the '/books' route`);
-})
+// app.get("/books", (req, res) => {
+//   console.log(`I'm the '/books' route`);
+// })
 
-app.get("/books/:bookId", (req, res) => {
-  console.log(req.params);
-});
-
-
-app.get("/books/:bookId/chapters", (req, res) => {
-  console.log(`I'm the '/books/:id/chapters' route`);
-});
+// app.get("/books/:bookId", (req, res) => {
+//   console.log(req.params);
+// });
 
 
-app.get("/books/:bookId/chapters/:chapterId", (req, res) => {
-  console.log(`I'm the '/books/:id/chapters/:chapterId' route`);
-});
+// app.get("/books/:bookId/chapters", (req, res) => {
+//   console.log(`I'm the '/books/:id/chapters' route`);
+// });
+
+
+// app.get("/books/:bookId/chapters/:chapterId", (req, res) => {
+//   console.log(`I'm the '/books/:id/chapters/:chapterId' route`);
+// });
 
 
 
-app.get("/books/:bookId/chapters/:chapterId/update", async (req, res) => {
-  console.log(`I'm the '/books/:id/chapters/:chapterId/update' route`);
-  const result = await sleep(100)
-  return res.json(result)
-});
+// app.get("/books/:bookId/chapters/:chapterId/update", async (req, res) => {
+//   console.log(`I'm the '/books/:id/chapters/:chapterId/update' route`);
+//   const result = await sleep(100)
+//   return res.json(result)
+// });
 
 
-app.get("/books/:bookId/chapters/:chapterId/delete", (req, res) => {
-  console.log(`I'm the '/books/:id/chapters/:chapterId/delete' route`);
-});
+// app.get("/books/:bookId/chapters/:chapterId/delete", (req, res) => {
+//   console.log(`I'm the '/books/:id/chapters/:chapterId/delete' route`);
+// });
 
 
 app.get("/authors/:authorId/books/:bookId/download", (req, res) => {
@@ -77,9 +91,6 @@ app.get("/authors/:authorId/books/:bookId/download", (req, res) => {
   })
   return res.send({ message: "Done going through all middleware", params: req.params })
 });
-
-
-console.timeEnd("Time to register routes")
 
 
 

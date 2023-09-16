@@ -9,6 +9,7 @@ export interface BanhMiRouteMatcherNode {
 }
 
 
+
 export type BanhMiRouteHandlersMap = Record<BanhMiHttpMethod, Record<string, BanhMiRouteMatcherNode>>
 
-
+export type BanhMiRouterRouteHandlersMap = Record<BanhMiHttpMethod, Record<string, BanhMiHandler[]>>

@@ -83,7 +83,7 @@ export class BanhMiApplication {
                 const banhMiResponse = new BanhMiResponse()
 
                 const requestBodyDataMimeType = request.headers.get("content-type")
-
+                
                 switch (true) {
                     case (requestBodyDataMimeType?.includes("application/json") && that.bodyParsers.includes(BanhMiBodyParsingMethod.json) && !request.bodyUsed):
                         banhMiRequest.body = await request.json()                        

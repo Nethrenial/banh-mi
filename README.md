@@ -1,15 +1,3 @@
-# banh-mi
+# banh-mi (BanhMi)
 
-To install dependencies:
-
-```bash
-bun install
-```
-
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v0.5.8. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+Banh Mi is a web framework inspired by express for Bun runtime, unlike express it aims to support typescript fully with the performance advantages of Bun. It's in it's early stage with no sufficient testing. Contributions and advices on improvement are always welcome!

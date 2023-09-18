@@ -2,7 +2,7 @@ import { Server as BunServer } from "bun"
 import { BanhMiRequest } from "./BanhMiRequest.js"
 import { BanhMiResponse } from "./BanhMiResponse.js"
 import { BanhMiHttpMethod, BanhMiRouteType } from "./enums/index.js"
-import { BanhMiBodyParsingMethod, BanhMiHandler, BanhMiRouteHandlersMap, BanhMiRouteMatcherNode, SetupBodyParserOption } from "./types/index.js"
+import { BanhMiBodyParsingMethod, BanhMiHandler, BanhMiRouteHandlersMap, BanhMiRouteMatcherNode } from "./types/index.js"
 import { onlyLogInFrameworkDevelopmentProcess, parseJsonBody } from "./utils/index.js"
 import { isAsyncFunction } from "util/types"
 import { BanhMiRouter } from "./BanhMiRouter.js"
@@ -23,7 +23,7 @@ export class BanhMiApplication {
         PUT: {},
     }
 
-    bodyParsers: SetupBodyParserOption[] = []
+    bodyParsers: BanhMiBodyParsingMethod[] = []
 
     // for now use method will only be used to register routers
     setupRouter(path: string, router: BanhMiRouter) {
@@ -46,8 +46,8 @@ export class BanhMiApplication {
         this.globalHandlers.push(...handlers)
     }
 
-    setupBodyParser<T extends BanhMiBodyParsingMethod>(parser: SetupBodyParserOption<T>) {
-        this.bodyParsers.push(parser)
+    setupBodyParsers(...parsers: BanhMiBodyParsingMethod[]) {
+        this.bodyParsers.push(...parsers)
     }
 
 
@@ -82,19 +82,26 @@ export class BanhMiApplication {
                 const banhMiRequest = new BanhMiRequest(that, request)
                 const banhMiResponse = new BanhMiResponse()
 
+                const requestBodyDataMimeType = request.headers.get("content-type")
 
-                that.bodyParsers.forEach(async ({ method, options }) => {
-                    switch (method) {
-                        case BanhMiBodyParsingMethod.json:
-                            console.log("Got here")
-                            const parseResult = await parseJsonBody(request)
-                            if(parseResult) {
-                                banhMiRequest.body = parseResult
-                            }
-                    }
-                })
-
-
+                switch (true) {
+                    case (requestBodyDataMimeType?.includes("application/json") && that.bodyParsers.includes(BanhMiBodyParsingMethod.json) && !request.bodyUsed):
+                        banhMiRequest.body = await request.json()                        
+                        break;
+                    case (requestBodyDataMimeType?.includes("application/x-www-form-urlencoded") && that.bodyParsers.includes(BanhMiBodyParsingMethod.urlencoded) && !request.bodyUsed):
+                        banhMiRequest.body = Object.fromEntries((await request.formData()).entries())
+                        break;
+                    case (requestBodyDataMimeType?.includes("text/plain") && that.bodyParsers.includes(BanhMiBodyParsingMethod.text) && !request.bodyUsed):
+                        banhMiRequest.body = await request.text()
+                        break;
+                    case (requestBodyDataMimeType?.includes("multipart/form-data") && that.bodyParsers.includes(BanhMiBodyParsingMethod.raw) && !request.bodyUsed):
+                        banhMiRequest.body = await request.formData()
+                        break;
+                    case (requestBodyDataMimeType?.includes("application/octet-stream") && that.bodyParsers.includes(BanhMiBodyParsingMethod.raw) && !request.bodyUsed):
+                        banhMiRequest.body = await request.blob()
+                    default:
+                        break;
+                }
 
                 let response: any
                 for (const [index, handler] of that.globalHandlers.entries()) {

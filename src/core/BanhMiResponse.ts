@@ -61,7 +61,6 @@ export class BanhMiResponse {
                     ...responseOptions.headers,
                     'Content-Type': 'application/json',
                 };
-                console.log(body)
                 return new Response(body, responseOptions);
             } catch (error) {
                 throw new Error('Given object is not json serializable');

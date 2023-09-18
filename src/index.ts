@@ -4,15 +4,11 @@ import { BanhMiBodyParsingMethod } from "./core/types/banh-mi-request.types.js";
 
 const app = new BanhMiApplication();
 
-app.setupBodyParser({
-  method: BanhMiBodyParsingMethod.json,
-  options: {
+app.setupBodyParsers(BanhMiBodyParsingMethod.json, BanhMiBodyParsingMethod.urlencoded, BanhMiBodyParsingMethod.text, BanhMiBodyParsingMethod.raw)
 
-  }
-})
-
-app.setupGlobalMiddleware((req) => {
+app.setupGlobalMiddleware((req, res) => {
   req.message1 = "Hello from middleware 1"
+  return res.send("I intercepted the request")
 })
 
 app.setupRouter("/books", booksController)
@@ -92,6 +88,24 @@ app.get("/authors/:authorId/books/:bookId/download", (req, res) => {
   return res.send({ message: "Done going through all middleware", params: req.params })
 });
 
+let num_of_requests = 0
+let queries : Record<string, string> = {}
+
+app.get("/get-params", (req, res) => {
+  num_of_requests++
+  for (const key in req.query) {
+    if (Object.prototype.hasOwnProperty.call(req.query, key)) {
+      const element = req.query[key];
+      queries[key] = element
+    }
+  }
+  if(req.query["num_of_requests"]) {
+    console.log(num_of_requests)
+    console.log(`Number of random query params: ${Object.entries(queries).length}`)
+    console.log(Bun.write('query-params.json',JSON.stringify(queries)))
+  }
+  return res.json({ message: "All the params"})
+})
 
 
 

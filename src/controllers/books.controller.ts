@@ -19,9 +19,10 @@ booksController.get("/", (req, res) => {
     return res.send(BOOKS)
 })
 
+
+
 booksController.post("/", (req, res) => {
-    console.log(req.body)
-    return res.send("This action creates a book")
+    return res.send(req.body)
 })
 
 booksController.get("/:bookId", (req, res) => {

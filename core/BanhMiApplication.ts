@@ -125,13 +125,13 @@ export class BanhMiApplication {
                     console.log(fullFilePath)
                     const file = Bun.file(fullFilePath)
                     const fileExists = await file.exists()
-                    if(!fileExists) {
+                    if (!fileExists) {
                         return new Response("Not Found", {
                             status: 404,
                             statusText: "Not Found"
                         })
                     }
-                    const fileContent = file.size === 0 ? '' : ( that.isBinaryMimeType(mimeType) ? file.stream()  : await file.text())
+                    const fileContent = file.size === 0 ? '' : (that.isBinaryMimeType(mimeType) ? file.stream() : await file.text())
                     return new Response(fileContent, {
                         headers: {
                             "content-type": mimeType
@@ -145,24 +145,30 @@ export class BanhMiApplication {
 
                 const requestBodyDataMimeType = request.headers.get("content-type")
 
-                switch (true) {
-                    case (requestBodyDataMimeType?.includes("application/json") && that.bodyParsers.includes(BanhMiBodyParsingMethod.json) && !request.bodyUsed):
-                        banhMiRequest.body = await request.json()
-                        break;
-                    case (requestBodyDataMimeType?.includes("application/x-www-form-urlencoded") && that.bodyParsers.includes(BanhMiBodyParsingMethod.urlencoded) && !request.bodyUsed):
-                        banhMiRequest.body = Object.fromEntries((await request.formData()).entries())
-                        break;
-                    case (requestBodyDataMimeType?.includes("text/plain") && that.bodyParsers.includes(BanhMiBodyParsingMethod.text) && !request.bodyUsed):
-                        banhMiRequest.body = await request.text()
-                        break;
-                    case (requestBodyDataMimeType?.includes("multipart/form-data") && that.bodyParsers.includes(BanhMiBodyParsingMethod.raw) && !request.bodyUsed):
-                        banhMiRequest.body = await request.formData()
-                        break;
-                    case (requestBodyDataMimeType?.includes("application/octet-stream") && that.bodyParsers.includes(BanhMiBodyParsingMethod.raw) && !request.bodyUsed):
-                        banhMiRequest.body = await request.blob()
-                    default:
-                        break;
+
+                try {
+                    switch (true) {
+                        case (requestBodyDataMimeType?.includes("application/json") && that.bodyParsers.includes(BanhMiBodyParsingMethod.json) && !request.bodyUsed):
+                            banhMiRequest.body = await request.json()
+                            break;
+                        case (requestBodyDataMimeType?.includes("application/x-www-form-urlencoded") && that.bodyParsers.includes(BanhMiBodyParsingMethod.urlencoded) && !request.bodyUsed):
+                            banhMiRequest.body = Object.fromEntries((await request.formData()).entries())
+                            break;
+                        case (requestBodyDataMimeType?.includes("text/plain") && that.bodyParsers.includes(BanhMiBodyParsingMethod.text) && !request.bodyUsed):
+                            banhMiRequest.body = await request.text()
+                            break;
+                        case (requestBodyDataMimeType?.includes("multipart/form-data") && that.bodyParsers.includes(BanhMiBodyParsingMethod.raw) && !request.bodyUsed):
+                            banhMiRequest.body = await request.formData()
+                            break;
+                        case (requestBodyDataMimeType?.includes("application/octet-stream") && that.bodyParsers.includes(BanhMiBodyParsingMethod.raw) && !request.bodyUsed):
+                            banhMiRequest.body = await request.blob()
+                        default:
+                            break;
+                    }
+                } catch (error) {
+                    banhMiRequest.body = undefined
                 }
+
 
                 let response: any
                 for (const [index, handler] of that.globalHandlers.entries()) {

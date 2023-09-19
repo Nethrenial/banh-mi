@@ -4,13 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nabla&family=Rubik:wght@300;400;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/main.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>Hello from BanhMi</title>
+    <title>BanhMi ToDo</title>
 </head>
 
 <body>
@@ -20,11 +24,13 @@
             <h1 class="text-4xl font-bold text-center">BanhMi ToDo</h1>
             <p class="text-justify text-sm">
                 BanhMi is a simple & experimental framework written for Bun runtime.It's currently only intended for
-                personal use.It's not even released on NPM yet.And the examples are also included in the base repository.
+                personal use.It's not even released on NPM yet.And the examples are also included in the base
+                repository.
                 It's not heavily tested and not recommended for production use and the api can change at anytime.
                 This todo application is written with html, css, tailwindcss,javascript, banh-mi and mongoose (mongodb)
                 to serve as an feature showcase of banh-mi framework.
-                Planning on releasing after features equivalent to expressjs are implemented and enough testing is conducted.
+                Planning on releasing after features equivalent to expressjs are implemented and enough testing is
+                conducted.
             </p>
             <div>
                 <h3 class="text-xl font-semibold">Learn more</h3>
@@ -69,32 +75,6 @@
             </ul>
             <h2 class="text-lg my-4 font-semibold">Completed Tasks</h2>
             <ul id="completed-tasks">
-                <li class="flex items-center justify-between">
-                    <p>Task 1</p>
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" name="task-1-complete" id="task-1-complete">
-                        <button>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 384 512">
-                                <path fill="currentColor"
-                                    d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7L86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256L41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3l105.4 105.3c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256l105.3-105.4z" />
-                            </svg>
-                        </button>
-                    </div>
-                </li>
-                <li class="flex items-center justify-between">
-                    <p>Task 1</p>
-                    <div>
-                        <input type="checkbox" name="task-1-complete" id="task-1-complete">
-                        <button>Delete</button>
-                    </div>
-                </li>
-                <li class="flex items-center justify-between">
-                    <p>Task 1</p>
-                    <div>
-                        <input type="checkbox" name="task-1-complete" id="task-1-complete">
-                        <button>Delete</button>
-                    </div>
-                </li>
             </ul>
         </section>
     </main>

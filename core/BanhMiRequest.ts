@@ -11,7 +11,7 @@ import { parseCookies, parseHeaders } from "./utils/index"
 export class BanhMiRequest {
     [x: string]: any
 
-    private request: Request
+    #request: Request
 
 
 
@@ -20,16 +20,16 @@ export class BanhMiRequest {
      */
     app: BanhMiApplication
 
-    private _params: Record<string, string | undefined> = {}
+    #params: Record<string, string | undefined> = {}
 
 
     constructor(app: BanhMiApplication, request: Request, options?: {
         _params?: Record<string, string>
     }) {
         this.app = app
-        this.request = request
+        this.#request = request
         if (options) {
-            this._params = options._params ? options._params : {}
+            this.#params = options._params ? options._params : {}
         }
     }
 
@@ -46,11 +46,11 @@ export class BanhMiRequest {
      * ```
      */
     get params() {
-        return this._params
+        return this.#params
     }
 
     set params(params: Record<string, string | undefined>) {
-        this._params = params
+        this.#params = params
     }
 
 
@@ -66,53 +66,53 @@ export class BanhMiRequest {
      * ```
      */
     getParams<ParamsInterface = Record<string, string | undefined>>() {
-        return this._params as ParamsInterface
+        return this.#params as ParamsInterface
     }
 
 
-    private _baseUrl: string | null = null
+    #baseUrl: string | null = null
     /**
      * Base url of the request
      */
     get baseUrl() {
-        if (this._baseUrl) return this._baseUrl
+        if (this.#baseUrl) return this.#baseUrl
         const fullPath = this.path
         if (fullPath === '/') {
-            this._baseUrl = "/"
+            this.#baseUrl = "/"
             return "/"
         }
         const urlSegments = fullPath.split('/')
-        this._baseUrl = `/${urlSegments[1]}`
-        return this._baseUrl
+        this.#baseUrl = `/${urlSegments[1]}`
+        return this.#baseUrl
     }
 
-    private _path: string | null = null
+    #path: string | null = null
     /**
      * Full path of the request
      */
     get path() {
-        if (this._path) return this._path
+        if (this.#path) return this.#path
         return new URL(this.request.url).pathname
     }
 
-    private _hostname: string | null = null
+    #hostname: string | null = null
     /**
      * Hostname of the request
      */
     get hostname() {
-        if (this._hostname) return this._hostname
+        if (this.#hostname) return this.#hostname
         return new URL(this.request.url).hostname
     }
 
 
-    private _headers: Record<string, string | string[]> | null = null
+    #headers: Record<string, string | string[]> | null = null
     /**
      * Headers as a object
      */
     get headers() {
-        if (this._headers) return this._headers
-        this._headers = parseHeaders(this.request.headers)
-        return this._headers
+        if (this.#headers) return this.#headers
+        this.#headers = parseHeaders(this.request.headers)
+        return this.#headers
     }
 
     /**
@@ -155,14 +155,14 @@ export class BanhMiRequest {
         return this.headers[key] as HeaderType | undefined
     }
 
-    private _cookies: Record<string, string> | null = null
+    #cookies: Record<string, string> | null = null
     /**
      * Cookies as a object
      */
     get cookies() {
-        if (this._cookies) return this._cookies
-        this._cookies = parseCookies(this.request.headers)
-        return this._cookies
+        if (this.#cookies) return this.#cookies
+        this.#cookies = parseCookies(this.request.headers)
+        return this.#cookies
     }
 
     /**
@@ -178,19 +178,19 @@ export class BanhMiRequest {
         return this.cookies as CookiesInterface
     }
 
-    private _query: Record<string, string> | null = null
+    #query: Record<string, string> | null = null
     /**
      * Query parameters as a object
      */
     get query() {
-        if (this._query) return this._query
+        if (this.#query) return this.#query
         const rawSearchParams = new URL(this.request.url).searchParams
-        this._query = {}
+        this.#query = {}
         rawSearchParams.forEach((value, key) => {
-            if (this._query)
-                this._query[key] = value
+            if (this.#query)
+                this.#query[key] = value
         })
-        return this._query
+        return this.#query
     }
 
     /**
@@ -206,14 +206,14 @@ export class BanhMiRequest {
         return this.query as QueryInterface
     }
 
-    private _body: any = null
+    #body: any = null
 
     get body() {
-        return this._body ?? undefined
+        return this.#body ?? undefined
     }
 
     set body(body: any) {
-        this._body = body
+        this.#body = body
     }
 
     getBody<BodyInterface = any>() {

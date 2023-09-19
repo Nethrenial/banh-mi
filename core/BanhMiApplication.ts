@@ -29,7 +29,7 @@ export class BanhMiApplication {
     staticFolder: string | null = null
 
 
-    private async _setStaticFolder(path: string) {
+    async #setStaticFolder(path: string) {
         try {
             await fs.access(path, fs.constants.R_OK)
             this.staticFolder = path
@@ -43,7 +43,7 @@ export class BanhMiApplication {
         try {
             const stats = await fs.stat(path)
             if (stats.isDirectory()) {
-                await this._setStaticFolder(path)
+                await this.#setStaticFolder(path)
             } else {
                 throw new Error("Path is not a directory")
             }
@@ -51,7 +51,7 @@ export class BanhMiApplication {
             // create the directory
             try {
                 await fs.mkdir(path)
-                await this._setStaticFolder(path)
+                await this.#setStaticFolder(path)
             } catch (err) {
                 throw new Error("Can't create directory: " + (err as Error).message)
             }
@@ -68,7 +68,7 @@ export class BanhMiApplication {
                     if (handlersMap.hasOwnProperty(partialPath)) {
                         const handlers = handlersMap[partialPath]
                         const fullPath = path + partialPath
-                        this.registerRoute(fullPath, method as BanhMiHttpMethod, handlers)
+                        this.#registerRoute(fullPath, method as BanhMiHttpMethod, handlers)
                     }
                 }
             }
@@ -85,23 +85,23 @@ export class BanhMiApplication {
 
 
     get(path: string, ...handlers: BanhMiHandler[]) {
-        this.registerRoute(path, BanhMiHttpMethod.GET, handlers)
+        this.#registerRoute(path, BanhMiHttpMethod.GET, handlers)
     }
 
     post(path: string, ...handlers: BanhMiHandler[]) {
-        this.registerRoute(path, BanhMiHttpMethod.POST, handlers)
+        this.#registerRoute(path, BanhMiHttpMethod.POST, handlers)
     }
 
     put(path: string, ...handlers: BanhMiHandler[]) {
-        this.registerRoute(path, BanhMiHttpMethod.PUT, handlers)
+        this.#registerRoute(path, BanhMiHttpMethod.PUT, handlers)
     }
 
     patch(path: string, ...handlers: BanhMiHandler[]) {
-        this.registerRoute(path, BanhMiHttpMethod.PATCH, handlers)
+        this.#registerRoute(path, BanhMiHttpMethod.PATCH, handlers)
     }
 
     delete(path: string, ...handlers: BanhMiHandler[]) {
-        this.registerRoute(path, BanhMiHttpMethod.DELETE, handlers)
+        this.#registerRoute(path, BanhMiHttpMethod.DELETE, handlers)
     }
 
     listen(port: number | string, callback?: (server: BunServer) => any | Promise<any>) {
@@ -186,7 +186,7 @@ export class BanhMiApplication {
                     return response
 
                 // console.time("Time to get the matched handlers")
-                const matchedHandlers = that.matchRoute(path, request.method as BanhMiHttpMethod)
+                const matchedHandlers = that.#matchRoute(path, request.method as BanhMiHttpMethod)
                 // console.timeEnd("Time to get the matched handlers")
                 onlyLogInFrameworkDevelopmentProcess("Matched handlers", matchedHandlers)
                 if (matchedHandlers === null) {
@@ -243,7 +243,7 @@ export class BanhMiApplication {
         if (callback) callback(server)
     }
 
-    private registerRoute(path: string, method: BanhMiHttpMethod, handlers: BanhMiHandler[]) {
+    #registerRoute(path: string, method: BanhMiHttpMethod, handlers: BanhMiHandler[]) {
         if (path === '/') {
             this.handlers[method]['/'] = { type: BanhMiRouteType.static, handlers, children: {}, self: "/" }
             return
@@ -296,7 +296,7 @@ export class BanhMiApplication {
     }
 
 
-    private matchRoute(path: string, method: BanhMiHttpMethod) {
+    #matchRoute(path: string, method: BanhMiHttpMethod) {
         const params: Record<string, string> = {}
 
         if (path === "/") {
@@ -317,7 +317,7 @@ export class BanhMiApplication {
                 onlyLogInFrameworkDevelopmentProcess("Found a matcher node => ", matcherNode.self)
                 return matcherNode.handlers.length > 0 ? { handlers: matcherNode.handlers, type: BanhMiRouteType.static, params } : null
             } else {
-                const dynamicMatcher = this.matchingNodeHasDynamicMatcher(this.handlers[method])
+                const dynamicMatcher = this.#matchingNodeHasDynamicMatcher(this.handlers[method])
                 if (dynamicMatcher) {
                     const dynamicMatcherNode = this.handlers[method][dynamicMatcher]
                     onlyLogInFrameworkDevelopmentProcess(dynamicMatcherNode)
@@ -342,7 +342,7 @@ export class BanhMiApplication {
                 } else if (matcherNode && matcherIndex !== pathSegments.length - 1) {
                     onlyLogInFrameworkDevelopmentProcess(`Static match found for ${matcher}, continue checking for the next matcher`)
                 } else if (!matcherNode) {
-                    const dynamicMatcher = this.matchingNodeHasDynamicMatcher(matcherIndex === 0 ? this.handlers[method] : (prevMatcherNode ? prevMatcherNode.children : {}))
+                    const dynamicMatcher = this.#matchingNodeHasDynamicMatcher(matcherIndex === 0 ? this.handlers[method] : (prevMatcherNode ? prevMatcherNode.children : {}))
                     if (dynamicMatcher) {
                         if (matcherIndex !== pathSegments.length - 1) {
                             onlyLogInFrameworkDevelopmentProcess(`Dynamic match found for ${matcher}, setting params and continue checking for the next matcher`)
@@ -373,7 +373,7 @@ export class BanhMiApplication {
 
 
 
-    private matchingNodeHasDynamicMatcher(obj: Record<string, BanhMiRouteMatcherNode>) {
+    #matchingNodeHasDynamicMatcher(obj: Record<string, BanhMiRouteMatcherNode>) {
         for (const prop in obj) {
             if (obj.hasOwnProperty(prop)) {
                 const value = obj[prop]

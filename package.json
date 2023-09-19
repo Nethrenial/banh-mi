@@ -6,6 +6,10 @@
     "start:dev": "bun run --watch ./src/index.ts"
   },
   "devDependencies": {
+    "@types/mime": "^3.0.1",
     "bun-types": "^1.0.2"
+  },
+  "dependencies": {
+    "mime": "^3.0.0"
   }
 }

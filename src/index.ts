@@ -4,12 +4,14 @@ import { BanhMiBodyParsingMethod } from "./core/types/banh-mi-request.types.js";
 
 const app = new BanhMiApplication();
 
-app.setupBodyParsers(BanhMiBodyParsingMethod.json, BanhMiBodyParsingMethod.urlencoded, BanhMiBodyParsingMethod.text, BanhMiBodyParsingMethod.raw)
+app.setupBodyParsers(
+  BanhMiBodyParsingMethod.json,
+  BanhMiBodyParsingMethod.urlencoded,
+  BanhMiBodyParsingMethod.text,
+  BanhMiBodyParsingMethod.raw
+)
 
-app.setupGlobalMiddleware((req, res) => {
-  req.message1 = "Hello from middleware 1"
-  return res.send("I intercepted the request")
-})
+app.setupStaticFolder("public")
 
 app.setupRouter("/books", booksController)
 
@@ -21,19 +23,8 @@ function sleep(ms: number, message?: string) {
 }
 
 
-app.get("/", (req, res) => {
-  req.message1 = "Hello from middleware 1"
-}, async (req, res) => {
-  console.time("Time to settle message 2")
-  req.message2 = await sleep(2, "Hello from middleware 2")
-  console.timeEnd("Time to settle message 2")
-}, (req, res) => {
-  req.message3 = "Hello from middleware 3"
-}, (req, res) => {
-  [1, 2, 3].forEach(n => {
-    console.log(req[`message${n}`])
-  })
-  return res.send("Done going through all middleware")
+app.get("/", async (req, res) => {
+  return res.sendFile("/index.html")
 });
 
 
@@ -89,7 +80,7 @@ app.get("/authors/:authorId/books/:bookId/download", (req, res) => {
 });
 
 let num_of_requests = 0
-let queries : Record<string, string> = {}
+let queries: Record<string, string> = {}
 
 app.get("/get-params", (req, res) => {
   num_of_requests++
@@ -99,12 +90,12 @@ app.get("/get-params", (req, res) => {
       queries[key] = element
     }
   }
-  if(req.query["num_of_requests"]) {
+  if (req.query["num_of_requests"]) {
     console.log(num_of_requests)
     console.log(`Number of random query params: ${Object.entries(queries).length}`)
-    console.log(Bun.write('query-params.json',JSON.stringify(queries)))
+    console.log(Bun.write('query-params.json', JSON.stringify(queries)))
   }
-  return res.json({ message: "All the params"})
+  return res.json({ message: "All the params" })
 })
 
 

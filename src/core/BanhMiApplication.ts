@@ -1,4 +1,6 @@
 import { Server as BunServer } from "bun"
+import * as fs from 'node:fs/promises'
+import mime from "mime"
 import { BanhMiRequest } from "./BanhMiRequest.js"
 import { BanhMiResponse } from "./BanhMiResponse.js"
 import { BanhMiHttpMethod, BanhMiRouteType } from "./enums/index.js"
@@ -24,6 +26,37 @@ export class BanhMiApplication {
     }
 
     bodyParsers: BanhMiBodyParsingMethod[] = []
+    staticFolder: string | null = null
+
+
+    private async _setStaticFolder(path: string) {
+        try {
+            await fs.access(path, fs.constants.R_OK)
+            this.staticFolder = path
+        } catch (err) {
+            throw new Error("You don't have read access to this directory")
+        }
+    }
+
+    async setupStaticFolder(path: string) {
+        // check if path exists
+        try {
+            const stats = await fs.stat(path)
+            if (stats.isDirectory()) {
+                await this._setStaticFolder(path)
+            } else {
+                throw new Error("Path is not a directory")
+            }
+        } catch (err) {
+            // create the directory
+            try {
+                await fs.mkdir(path)
+                await this._setStaticFolder(path)
+            } catch (err) {
+                throw new Error("Can't create directory: " + (err as Error).message)
+            }
+        }
+    }
 
     // for now use method will only be used to register routers
     setupRouter(path: string, router: BanhMiRouter) {
@@ -78,15 +111,41 @@ export class BanhMiApplication {
             port,
             async fetch(request, server) {
 
+                console.log(`My static path is ${that.staticFolder}`)
+
                 const path = new URL(request.url).pathname
+                console.log(path)
+
+                const mimeType = that.getMimeTypeIfReqestingFileInsteadOfARoute(path)
+                if (mimeType) {
+                    console.log("Requesting a file with ", mimeType)
+                    const fullFilePath = that.staticFolder + path
+                    console.log(fullFilePath)
+                    const file = Bun.file(fullFilePath)
+                    const fileExists = await file.exists()
+                    if(!fileExists) {
+                        return new Response("Not Found", {
+                            status: 404,
+                            statusText: "Not Found"
+                        })
+                    }
+                    const fileContent = file.size === 0 ? '' : ( that.isBinaryMimeType(mimeType) ? file.stream()  : await file.text())
+                    return new Response(fileContent, {
+                        headers: {
+                            "content-type": mimeType
+                        }
+                    })
+                }
+
+
                 const banhMiRequest = new BanhMiRequest(that, request)
-                const banhMiResponse = new BanhMiResponse()
+                const banhMiResponse = new BanhMiResponse(that)
 
                 const requestBodyDataMimeType = request.headers.get("content-type")
-                
+
                 switch (true) {
                     case (requestBodyDataMimeType?.includes("application/json") && that.bodyParsers.includes(BanhMiBodyParsingMethod.json) && !request.bodyUsed):
-                        banhMiRequest.body = await request.json()                        
+                        banhMiRequest.body = await request.json()
                         break;
                     case (requestBodyDataMimeType?.includes("application/x-www-form-urlencoded") && that.bodyParsers.includes(BanhMiBodyParsingMethod.urlencoded) && !request.bodyUsed):
                         banhMiRequest.body = Object.fromEntries((await request.formData()).entries())
@@ -120,6 +179,7 @@ export class BanhMiApplication {
 
                 // console.time("Time to get the matched handlers")
                 const matchedHandlers = that.matchRoute(path, request.method as BanhMiHttpMethod)
+                console.log(matchedHandlers)
                 // console.timeEnd("Time to get the matched handlers")
                 onlyLogInFrameworkDevelopmentProcess("Matched handlers", matchedHandlers)
                 if (matchedHandlers === null) {
@@ -134,7 +194,6 @@ export class BanhMiApplication {
                         }
 
                         banhMiRequest.params = matchedHandlers.params
-                        const banhMiResponse = new BanhMiResponse()
 
                         const handlers = matchedHandlers.handlers
                         if (handlers.length === 1) {
@@ -231,20 +290,16 @@ export class BanhMiApplication {
 
 
     private matchRoute(path: string, method: BanhMiHttpMethod) {
-
-        // remove last slash if any
-        if (path[path.length - 1] === '/') {
-            path = path.slice(0, path.length - 1)
-        }
-
         const params: Record<string, string> = {}
-
-        // for now, ignore favicon request
-        if (path === '/favicon.ico') return null
 
         if (path === "/") {
             const matcherNode = this.handlers[method]['/']
             return matcherNode && matcherNode.handlers.length > 0 ? { handlers: matcherNode.handlers, type: BanhMiRouteType.static, params } : null
+        }
+
+        // remove last slash if any
+        if (path[path.length - 1] === '/') {
+            path = path.slice(0, path.length - 1)
         }
 
         const pathSegments = path.split('/').slice(1)
@@ -321,6 +376,27 @@ export class BanhMiApplication {
             }
         }
         return null;
+    }
+
+    getMimeTypeIfReqestingFileInsteadOfARoute(path: string) {
+        const pathSegments = path.split('/').slice(1)
+        const lastSegment = pathSegments[pathSegments.length - 1]
+        const lastSegmentSegments = lastSegment.split('.')
+        if (lastSegmentSegments.length > 1) {
+
+            // get mime type
+            const fileExtension = lastSegmentSegments[lastSegmentSegments.length - 1]
+            // use builtin node module to get mime type
+            const mimeType = mime.getType(fileExtension)
+            return mimeType
+
+        } else {
+            return false
+        }
+    }
+
+    isBinaryMimeType(mimeType: string) {
+        return mimeType.includes("image") || mimeType.includes("audio") || mimeType.includes("video")
     }
 
 }

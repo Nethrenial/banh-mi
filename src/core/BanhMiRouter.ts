@@ -1,4 +1,4 @@
-import { BanhMiHandler, BanhMiRouterRouteHandlersMap } from './types/index.js';
+import { BanhMiHandler, BanhMiRouterRouteHandlersMap } from './types';
 export class BanhMiRouter {
     routerHandlersMap: BanhMiRouterRouteHandlersMap = {
         GET: {},

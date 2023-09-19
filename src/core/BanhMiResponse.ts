@@ -1,3 +1,5 @@
+import { BanhMiApplication } from "./BanhMiApplication";
+
 export type JsonSerializable =
     | null
     | undefined
@@ -13,6 +15,37 @@ export type BanhMiResponseBodyAcceptedType = ReadableStream<any> | BlobPart | Bl
 export class BanhMiResponse {
 
     private _status: number = 200
+    app: BanhMiApplication 
+
+    constructor(app: BanhMiApplication) {
+        this.app = app
+    }
+
+
+    async sendFile(path: string) {
+        
+        const mimeType = this.app.getMimeTypeIfReqestingFileInsteadOfARoute(path)
+        console.log(mimeType)
+        if (mimeType) {
+            console.log("Requesting a file with ", mimeType)
+            const fullFilePath = this.app.staticFolder + path
+            console.log(fullFilePath)
+            const file = Bun.file(fullFilePath)
+            const fileExists = await file.exists()
+            if(!fileExists) {
+                return new Response("Not Found", {
+                    status: 404,
+                    statusText: "Not Found"
+                })
+            }
+            const fileContent = file.size === 0 ? '' : await file.text()
+            return new Response(fileContent, {
+                headers: {
+                    "content-type": mimeType
+                }
+            })
+        }
+    }
 
     send(data?: BanhMiResponseBodyAcceptedType) {
         // Default options for the Response constructor

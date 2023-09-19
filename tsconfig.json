@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
     "lib": [
-      "ESNext"
+      "ESNext",
+      "DOM",
     ],
-    "module": "NodeNext",
+    "module": "ESNext",
     "target": "esnext",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "Bundler",
     "strict": true,
     "downlevelIteration": true,
     "skipLibCheck": true,

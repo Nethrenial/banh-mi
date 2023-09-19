@@ -1,5 +1,5 @@
-import { BanhMiRequest } from "../BanhMiRequest.js"
-import { BanhMiResponse } from "../BanhMiResponse.js"
+import { BanhMiRequest } from "../BanhMiRequest"
+import { BanhMiResponse } from "../BanhMiResponse"
 
 export interface BanhMiNextFunctionResult {
     shouldContinue?: boolean

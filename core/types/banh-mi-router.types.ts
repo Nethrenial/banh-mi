@@ -1,5 +1,5 @@
-import { BanhMiHttpMethod, BanhMiRouteType } from "../enums/index.js"
-import { BanhMiHandler } from "./banh-mi-handlers.types.js"
+import { BanhMiHttpMethod, BanhMiRouteType } from "../enums"
+import { BanhMiHandler } from "./banh-mi-handlers.types"
 
 export interface BanhMiRouteMatcherNode {
     self: string

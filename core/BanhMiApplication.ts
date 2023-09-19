@@ -1,13 +1,13 @@
 import { Server as BunServer } from "bun"
 import * as fs from 'node:fs/promises'
-import mime from "mime"
-import { BanhMiRequest } from "./BanhMiRequest.js"
-import { BanhMiResponse } from "./BanhMiResponse.js"
-import { BanhMiHttpMethod, BanhMiRouteType } from "./enums/index.js"
-import { BanhMiBodyParsingMethod, BanhMiHandler, BanhMiRouteHandlersMap, BanhMiRouteMatcherNode } from "./types/index.js"
-import { onlyLogInFrameworkDevelopmentProcess, parseJsonBody } from "./utils/index.js"
 import { isAsyncFunction } from "util/types"
-import { BanhMiRouter } from "./BanhMiRouter.js"
+import mime from "mime"
+import { BanhMiRequest } from "./BanhMiRequest"
+import { BanhMiResponse } from "./BanhMiResponse"
+import { BanhMiHttpMethod, BanhMiRouteType } from "./enums"
+import { BanhMiBodyParsingMethod, BanhMiHandler, BanhMiRouteHandlersMap, BanhMiRouteMatcherNode } from "./types"
+import { onlyLogInFrameworkDevelopmentProcess } from "./utils"
+import { BanhMiRouter } from "./BanhMiRouter"
 
 
 
@@ -104,7 +104,9 @@ export class BanhMiApplication {
         this.registerRoute(path, BanhMiHttpMethod.DELETE, handlers)
     }
 
-    listen(port?: number, callback?: (server: BunServer) => any | Promise<any>) {
+    listen(port: number | string, callback?: (server: BunServer) => any | Promise<any>) {
+
+        port = Number(port)
         // onlyLogInFrameworkDevelopmentProcess(this.handlers)
         const that = this
         const server = Bun.serve({
@@ -179,7 +181,6 @@ export class BanhMiApplication {
 
                 // console.time("Time to get the matched handlers")
                 const matchedHandlers = that.matchRoute(path, request.method as BanhMiHttpMethod)
-                console.log(matchedHandlers)
                 // console.timeEnd("Time to get the matched handlers")
                 onlyLogInFrameworkDevelopmentProcess("Matched handlers", matchedHandlers)
                 if (matchedHandlers === null) {

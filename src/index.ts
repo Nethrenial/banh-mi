@@ -20,6 +20,10 @@ app.setupStaticFolder("src/public")
 app.setupRouter("/todos", todoController)
 
 
+app.get('/', (req, res) => {
+  return res.redirect('/todos')
+})
+
 // connecting to mongodb atlas
 await connectDB()
 

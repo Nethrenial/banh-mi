@@ -104,4 +104,15 @@ export class BanhMiResponse {
         }
     }
 
+
+    redirect(url: string, status: number = 302) {
+        const responseOptions: ResponseInit = {
+            status,
+            headers: {
+                Location: url,
+            },
+        };
+        return new Response(null, responseOptions);
+    }
+
 }

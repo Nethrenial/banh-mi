@@ -5,4 +5,5 @@ Banh Mi is a web framework inspired by express for Bun runtime, unlike express i
 
 ## Dependencies used for examples
 
+For now following dependencies are installed to make the examples work.Before the framework release, all the examples will be moved to another repository and the framework dependencies will be cleaned
 - mongoose

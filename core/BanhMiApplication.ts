@@ -112,11 +112,7 @@ export class BanhMiApplication {
         const server = Bun.serve({
             port,
             async fetch(request, server) {
-
-                console.log(`My static path is ${that.staticFolder}`)
-
                 const path = new URL(request.url).pathname
-                console.log(path)
 
                 const mimeType = that.getMimeTypeIfReqestingFileInsteadOfARoute(path)
                 if (mimeType) {

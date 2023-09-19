@@ -46,11 +46,8 @@ export class BanhMiResponse {
             headers: this.#headers,
         };
         const mimeType = this.app.getMimeTypeIfReqestingFileInsteadOfARoute(path)
-        console.log(mimeType)
         if (mimeType) {
-            console.log("Requesting a file with ", mimeType)
             const fullFilePath = this.app.staticFolder + path
-            console.log(fullFilePath)
             const file = Bun.file(fullFilePath)
             const fileExists = await file.exists()
             if (!fileExists) {
@@ -79,9 +76,6 @@ export class BanhMiResponse {
         const responseOptions: ResponseInit = {
             headers: this.#headers,
         };
-
-
-        console.log(responseOptions)
 
         let body: any
 

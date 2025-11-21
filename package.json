@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "mime": "^3.0.0",
-    "mongoose": "^7.5.2"
+    "mongoose": "^8.0.0"
   }
 }
